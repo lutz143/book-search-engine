@@ -20,59 +20,54 @@ const resolvers = {
     },
   
     Mutation: {
+        // add a user and asign a token
       addUser: async (parent, { username, email, password }) => {
         const user = await User.create({ username, email, password });
         const token = signToken(user);
         return { token, user };
       },
+        // attempt login and decode credentials
       login: async (parent, { email, password }) => {
         const user = await User.findOne({ email });
   
         if (!user) {
-          throw new AuthenticationError('No user found with this email address');
+          throw new AuthenticationError('Failed to login. Incorrect credentials.');
         }
   
         const correctPw = await user.isCorrectPassword(password);
   
         if (!correctPw) {
-          throw new AuthenticationError('Incorrect credentials');
+          throw new AuthenticationError('Failed to login. Incorrect credentials.');
         }
   
         const token = signToken(user);
   
         return { token, user };
       },
-      addBook: async (parent, { bookText, bookAuthor }) => {
-        const book = await Book.create({ bookText, bookAuthor });
-  
-        await User.findOneAndUpdate(
-          { username: bookAuthor },
-          { $addToSet: { books: book._id } }
-        );
-  
-        return book;
+        // update the current user with a new saved book
+      addBook: async (parent, { bookData }, context) => {
+        if (context.user) {
+            const updateUser = await User
+            .findOneAndUpdate(
+                { _id: context.user._id }, 
+                { $addToSet: {savedBooks: bookData } }, 
+                { new: true },
+            )
+            .populate("books");      
+            return updateUser;
+        }
+        throw new AuthenticationError('Please login to save a book.');
       },
-      addComment: async (parent, { bookId, commentText, commentAuthor }) => {
-        return Book.findOneAndUpdate(
-          { _id: bookId },
-          {
-            $addToSet: { comments: { commentText, commentAuthor } },
-          },
-          {
-            new: true,
-            runValidators: true,
-          }
-        );
-      },
-      removeBook: async (parent, { bookId }) => {
-        return Book.findOneAndDelete({ _id: bookId });
-      },
-      removeComment: async (parent, { bookId, commentId }) => {
-        return Book.findOneAndUpdate(
-          { _id: bookId },
-          { $pull: { comments: { _id: commentId } } },
-          { new: true }
-        );
+      removeBook: async (parent, { bookId }, context) => {
+        if (context.user) {
+            const updateUser = await User.findOneAndUpdate(
+                { _id: context.user._id },
+                { $pull: { savedBooks: { bookId } } },
+                { new: true },
+            )
+            return updateUser;
+        }
+        throw new AuthenticationError('Please login to delete a book.');
       },
     },
   };
