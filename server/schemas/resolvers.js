@@ -4,18 +4,16 @@ const { signToken } = require("../utils/auth");
 
 const resolvers = {
     Query: {
-      users: async () => {
-        return User.find().populate('books');
-      },
-      user: async (parent, { username }) => {
-        return User.findOne({ username }).populate('books');
-      },
-      books: async (parent, { username }) => {
-        const params = username ? { username } : {};
-        return Book.find(params).sort({ createdAt: -1 });
-      },
-      book: async (parent, { bookId }) => {
-        return Book.findOne({ _id: bookId });
+      user: async (parent, { username, password }, context) => {
+        if (context.user) {
+            const userData = await User
+            .findOne({ _id: context.user._id })
+            .select("-__v -password")
+            .populate("books");
+            
+            return userData;
+        };
+        throw new AuthenticationError('Please login.');
       },
     },
   
