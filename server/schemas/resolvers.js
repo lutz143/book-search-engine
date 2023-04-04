@@ -4,7 +4,7 @@ const { signToken } = require("../utils/auth");
 
 const resolvers = {
     Query: {
-      user: async (parent, args, context) => {
+      me: async (parent, args, context) => {
         if (context.user) {
             const userData = await User
             .findOne({ _id: context.user._id })
@@ -43,7 +43,7 @@ const resolvers = {
         return { token, user };
       },
         // update the current user with a new saved book
-      addBook: async (parent, { bookData }, context) => {
+      saveBook: async (parent, { bookData }, context) => {
         if (context.user) {
             const updateUser = await User
             .findOneAndUpdate(
