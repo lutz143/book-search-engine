@@ -4,6 +4,8 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "node server/server.js",
     "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
     "install": "cd server && npm i && cd ../client && npm i",
@@ -22,6 +24,8 @@
   "bugs": {
     "url": "https://github.com/lutz143/book-search-engine/issues"
   },
-  "homepage": "https://github.com/lutz143/book-search-engine#readme"
+  "homepage": "https://lutz143.github.io/book-search-engine",
+  "dependencies": {
+    "gh-pages": "^5.0.0"
+  }
 }
-
